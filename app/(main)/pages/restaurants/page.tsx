@@ -1,5 +1,4 @@
 'use client';
-
 import { useEffect, useState } from "react";
 import { RestaurantService } from "@/demo/service/restaurantService";
 import { Food } from "@/types/food";
@@ -12,6 +11,7 @@ import { DataView, DataViewLayoutOptions } from "primereact/dataview";
 const TableRestaurant = () => {
   const [foods, setFoods] = useState<Food[]>([]);
   const [layout, setLayout] = useState<"list" | "grid">("grid");
+  const [activeFoodId, setActiveFoodId] = useState<string | null>(null); 
 
   useEffect(() => {
     RestaurantService.getFeaturedFoods().then((data) => {
@@ -45,7 +45,7 @@ const TableRestaurant = () => {
           className="w-9 sm:w-16rem xl:w-10rem shadow-2 block mx-auto border-round"
           src={
             food.food_image ||
-            "https://www.primefaces.org/wp-content/uploads/2020/05/placeholder.png"
+            "/layout/images/banner-primeblocks${layoutConfig.colorScheme === 'light' ? '' : '-dark'}.png"
           }
           alt={food.food_name}
         />
@@ -79,44 +79,77 @@ const TableRestaurant = () => {
   );
 
   // 🍱 Grid layout
-  const gridItem = (food: Food, index: number) => (
-    <div className="col-12 sm:col-6 lg:col-4 p-2" key={`${food.id}-${index}`}>
-      <div className="p-4 border-1 surface-border surface-card border-round shadow-sm">
-        <div className="flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-          <div className="flex align-items-center gap-2">
-            <i className="pi pi-store" />
-            <span className="font-semibold">{food.restaurant_name}</span>
+  const gridItem = (food: Food, index: number) => {
+    const isActive = activeFoodId === food.id; // 👈 Check if this card is active
+
+    return (
+      <div className="col-12 sm:col-6 lg:col-4 p-2" key={`${food.id}-${index}`}>
+        <div className="p-4 border-1 surface-border surface-card border-round shadow-sm">
+          <div className="flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+            <div className="flex align-items-center gap-2">
+              <i className="pi pi-store" />
+              <span className="font-semibold">{food.restaurant_name}</span>
+            </div>
+            <Tag
+              value={food.restaurant_status || "Unknown"}
+              severity={getSeverity(food)}
+            />
           </div>
-          <Tag
-            value={food.restaurant_status || "Unknown"}
-            severity={getSeverity(food)}
-          />
-        </div>
-        <div className="flex flex-column align-items-center gap-3 py-4">
-          <img
-            className="w-9 shadow-2 border-round"
-            src={
-              food.food_image ||
-              "https://www.primefaces.org/wp-content/uploads/2020/05/placeholder.png"
-            }
-            alt={food.food_name}
-          />
-          <div className="text-xl font-bold text-center">{food.food_name}</div>
-          <Rating value={Number(food.food_rating) || 0} readOnly cancel={false} />
-        </div>
-        <div className="flex align-items-center justify-content-between mt-3">
-          <span className="text-2xl font-semibold">${food.Price || food.price || 0}</span>
-          <Button
-            icon="pi pi-shopping-cart"
-            className="p-button-rounded"
-            disabled={food.restaurant_status?.toUpperCase() === "CLOSED"}
-          />
+
+          <div className="flex flex-column align-items-center gap-3 py-4">
+            <img
+              className="w-9 shadow-2 border-round"
+              src={food.food_image || "/layout/images/placeholder.png"}
+              alt={food.food_name}
+            />
+            <div className="text-xl font-bold text-center">{food.food_name}</div>
+            <Rating value={Number(food.food_rating) || 0} readOnly cancel={false} />
+          </div>
+
+          {/* 👇 Toggle Section */}
+          <div
+            className="flex align-items-center justify-content-between mt-3 cursor-pointer"
+            onClick={() => setActiveFoodId(isActive ? null : food.id)}
+          >
+            <span className="text-2xl font-semibold">${food.Price || food.price || 0}</span>
+            <Button
+              icon="pi pi-ellipsis-h"
+              className="p-button-rounded p-button-text"
+            />
+          </div>
+
+          {/* 👇 Action Buttons */}
+          {isActive && (
+            <div className="flex justify-content-end gap-2 mt-3">
+              <Button
+                label="Add"
+                icon="pi pi-plus"
+                size="small"
+                severity="success"
+                onClick={() => console.log("Add Meal:", food.food_name)}
+              />
+              <Button
+                label="Edit"
+                icon="pi pi-pencil"
+                size="small"
+                severity="info"
+                onClick={() => console.log("Edit Meal:", food.food_name)}
+              />
+              <Button
+                label="Delete"
+                icon="pi pi-trash"
+                size="small"
+                severity="danger"
+                onClick={() => console.log("Delete Meal:", food.food_name)}
+              />
+            </div>
+          )}
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
-  // ✅ Fixed itemTemplate — now matches DataView’s type signature
+  // ✅ DataView Template
   const itemTemplate = (food: Food, layout: "list" | "grid") => {
     if (!food) return null;
     const index = foods.findIndex((f) => f.id === food.id);
