@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Dialog } from 'primereact/dialog';
 import { InputText } from 'primereact/inputtext';
 import { InputNumber } from 'primereact/inputnumber';
@@ -7,14 +7,16 @@ import { Dropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
 import { Toast } from 'primereact/toast';
 import { classNames } from 'primereact/utils';
+import { Food } from '@/types/food';
 
-interface AddMealModalProps {
+interface EditMealModalProps {
   visible: boolean;
+  food: Food | null;
   onHide: () => void;
-  onAdded?: () => void; 
+  onAdded?: () => void;
 }
 
-const AddMealModal: React.FC<AddMealModalProps> = ({ visible, onHide, onAdded }) => {
+const EditMealModal: React.FC<EditMealModalProps> = ({ visible, food, onHide, onAdded }) => {
   const [foodName, setFoodName] = useState('');
   const [foodRating, setFoodRating] = useState<number | null>(null);
   const [foodImage, setFoodImage] = useState('');
@@ -29,6 +31,18 @@ const AddMealModal: React.FC<AddMealModalProps> = ({ visible, onHide, onAdded })
     { label: 'Close', value: 'close' }
   ];
 
+  // Prefill form when `food` changes
+  useEffect(() => {
+    if (food) {
+      setFoodName(food.food_name || '');
+      setFoodRating(Number(food.food_rating) || null);
+      setFoodImage(food.food_image || '');
+      setRestaurantName(food.restaurant_name || '');
+      setRestaurantLogo(food.restaurant_logo || '');
+      setRestaurantStatus(food.restaurant_status?.toLowerCase() === 'open' ? 'open' : 'close');
+    }
+  }, [food]);
+
   const handleSubmit = async () => {
     setSubmitted(true);
 
@@ -36,30 +50,30 @@ const AddMealModal: React.FC<AddMealModalProps> = ({ visible, onHide, onAdded })
       return;
     }
 
+    if (!food) return;
+
     const payload = {
-      name: foodName,
-      rating: foodRating,
-      image: foodImage,
-      restaurant: {
-        name: restaurantName,
-        logo: restaurantLogo,
-        status: restaurantStatus
-      }
+      food_name: foodName,
+      food_rating: foodRating,
+      food_image: foodImage,
+      restaurant_name: restaurantName,
+      restaurant_logo: restaurantLogo,
+      restaurant_status: restaurantStatus
     };
 
     try {
-      const res = await fetch('https://6852821e0594059b23cdd834.mockapi.io/Food', {
-        method: 'POST',
+      const res = await fetch(`https://6852821e0594059b23cdd834.mockapi.io/Food/${food.id}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      const data = await res.json();
-      toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Meal added!', life: 3000 });
+      await res.json();
+      toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Meal updated!', life: 3000 });
       handleReset();
       onAdded?.();
     } catch (err) {
       console.error(err);
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Failed to add meal', life: 3000 });
+      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Failed to update meal', life: 3000 });
     }
   };
 
@@ -77,7 +91,7 @@ const AddMealModal: React.FC<AddMealModalProps> = ({ visible, onHide, onAdded })
   return (
     <>
       <Toast ref={toast} />
-      <Dialog header="Add a Meal" visible={visible} style={{ width: '450px' }} modal onHide={handleReset}>
+      <Dialog header="Edit Meal" visible={visible} style={{ width: '450px' }} modal onHide={handleReset}>
         <div className="p-fluid">
           <div className="field">
             <label htmlFor="foodName">Food Name*</label>
@@ -152,7 +166,7 @@ const AddMealModal: React.FC<AddMealModalProps> = ({ visible, onHide, onAdded })
 
           <div className="flex justify-content-end mt-4 gap-2">
             <Button label="Cancel" className="p-button-secondary" onClick={handleReset} />
-            <Button label="Add" className="p-button-primary" onClick={handleSubmit} />
+            <Button label="Save" className="p-button-primary" onClick={handleSubmit} />
           </div>
         </div>
       </Dialog>
@@ -160,4 +174,4 @@ const AddMealModal: React.FC<AddMealModalProps> = ({ visible, onHide, onAdded })
   );
 };
 
-export default AddMealModal;
+export default EditMealModal;
