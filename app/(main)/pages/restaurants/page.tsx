@@ -9,8 +9,10 @@ import { classNames } from "primereact/utils";
 import { DataView, DataViewLayoutOptions } from "primereact/dataview";
 import { Toast } from "primereact/toast";
 import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
+import { ProgressSpinner } from "primereact/progressspinner";
 import AddMealModal from "../AddMealModal/page";
 import EditMealModal from "../EditMealModal/page";
+import { InputText } from "primereact/inputtext";
 
 const TableRestaurant = () => {
     const [foods, setFoods] = useState<Food[]>([]);
@@ -20,7 +22,8 @@ const TableRestaurant = () => {
     const [isEditModalVisible, setEditModalVisible] = useState(false);
     const [selectedFood, setSelectedFood] = useState<Food | null>(null);
     const [loading, setLoading] = useState(true);
-
+    const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState("");
     const toast = useRef<Toast>(null);
 
     useEffect(() => {
@@ -33,6 +36,32 @@ const TableRestaurant = () => {
         RestaurantService.getFeaturedFoods()
             .then((data) => setFoods(data))
             .finally(() => setLoading(false));
+    };
+
+    // Filter foods
+    const filterFoods = async (name: string) => {
+        setLoading(true);
+        try {
+            const res = await fetch(`https://6852821e0594059b23cdd834.mockapi.io/Food?name=${encodeURIComponent(name)}`);
+            const data = await res.json();
+
+            const mappedData: Food[] = data.map((item: any) => ({
+                id: item.id,
+                food_name: item.name,
+                food_rating: item.rating,
+                restaurant_status: item.open ? "OPEN" : "CLOSED",
+                restaurant_name: "Unknown Restaurant",
+                food_image: item.logo || item.avatar,
+                Price: item.Price || item.price,
+            }));
+
+            setFoods(mappedData);
+        } catch (err) {
+            console.error(err);
+            toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Failed to filter foods', life: 3000 });
+        } finally {
+            setLoading(false);
+        }
     };
 
     const getSeverity = (food: Food) => {
@@ -58,6 +87,7 @@ const TableRestaurant = () => {
     // Delete food API call
     const deleteFood = async (id: string) => {
         try {
+            setDeletingId(id);
             await fetch(`https://6852821e0594059b23cdd834.mockapi.io/Food/${id}`, {
                 method: 'DELETE'
             });
@@ -66,6 +96,8 @@ const TableRestaurant = () => {
         } catch (err) {
             console.error(err);
             toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Failed to delete meal', life: 3000 });
+        } finally {
+            setDeletingId(null);
         }
     };
 
@@ -95,6 +127,8 @@ const TableRestaurant = () => {
     // Grid layout
     const gridItem = (food: Food, index: number) => {
         const isActive = activeFoodId === food.id;
+        const isDeleting = deletingId === food.id;
+
         return (
             <div className="col-12 sm:col-6 lg:col-4 p-2" key={`${food.id}-${index}`}>
                 <div className="p-4 border-1 surface-border surface-card border-round shadow-sm">
@@ -121,7 +155,15 @@ const TableRestaurant = () => {
                         <div className="flex justify-content-end gap-2 mt-3">
                             <Button label="Add" icon="pi pi-plus" size="small" severity="success" onClick={() => { setSelectedFood(food); setAddModalVisible(true); }} />
                             <Button label="Edit" icon="pi pi-pencil" size="small" severity="info" onClick={() => { setSelectedFood(food); setEditModalVisible(true); }} />
-                            <Button label="Delete" icon="pi pi-trash" size="small" severity="danger" onClick={() => confirmDelete(food)} />
+                            <Button
+                                label={isDeleting ? "" : "Delete"}
+                                icon={isDeleting ? undefined : "pi pi-trash"}
+                                size="small"
+                                severity="danger"
+                                onClick={() => confirmDelete(food)}
+                            >
+                                {isDeleting && <ProgressSpinner style={{ width: '20px', height: '20px' }} />}
+                            </Button>
                         </div>
                     )}
                 </div>
@@ -137,7 +179,13 @@ const TableRestaurant = () => {
     };
 
     const header = (
-        <div className="flex justify-content-end mb-3">
+        <div className="flex justify-content-between mb-3">
+            <InputText
+                placeholder="Search foods..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') filterFoods(searchTerm); }}
+            />
             <DataViewLayoutOptions layout={layout} onChange={(e) => setLayout(e.value as any)} />
         </div>
     );
@@ -147,14 +195,21 @@ const TableRestaurant = () => {
             <Toast ref={toast} />
             <ConfirmDialog />
             <h5 className="mb-4">🍔 Featured Foods</h5>
-            <DataView
-                value={foods}
-                itemTemplate={itemTemplate}
-                layout={layout}
-                header={header}
-                paginator
-                rows={6}
-            />
+
+            {loading ? (
+                <div className="flex justify-content-center my-6">
+                    <ProgressSpinner />
+                </div>
+            ) : (
+                <DataView
+                    value={foods}
+                    itemTemplate={itemTemplate}
+                    layout={layout}
+                    header={header}
+                    paginator
+                    rows={6}
+                />
+            )}
 
             {/* Add Meal Modal */}
             <AddMealModal
