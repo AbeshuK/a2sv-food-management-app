@@ -135,7 +135,7 @@ const TableRestaurant = () => {
                     <div className="flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
                         <div className="flex align-items-center gap-2">
                             <i className="pi pi-store" />
-                            <span className="font-semibold">{food.name}</span>
+                            <span className="font-semibold">{food.restaurantName || "Unnamed Restaurant"}</span>
                         </div>
                         <Tag value={food.status || "Unknown"} severity={getSeverity(food)} />
                     </div>
