@@ -107,7 +107,7 @@ const EditMealModal: React.FC<EditMealModalProps> = ({ visible, food, onHide, on
     setFoodImage('');
     setRestaurantName('');
     setRestaurantLogo('');
-    setRestaurantStatus('Open Now'); // default first option
+    setRestaurantStatus('Open Now'); 
     setSubmitted(false);
     onHide();
   };
