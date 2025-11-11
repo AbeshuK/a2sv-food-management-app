@@ -16,8 +16,8 @@ const AppMenu = () => {
         },
         {
             label: 'Restaurants',
-            items: [{ label: 'Get Featured Foods', icon: 'pi pi-fw pi-home', to: '/pages/restaurants' },
-                // { label: 'Add Meal', icon: 'pi pi-fw pi-chart-bar', to: '/demo/components/AddMealModal' },
+            items: [{ label: 'Get Featured Foods', icon: 'pi pi-spin pi-spinner', to: '/pages/restaurants' },
+                // { label: 'Add Meal', icon: 'pi pi-fw pi-plus', to: '/demo/components/AddMealModal' },
             ]
         },
         {
