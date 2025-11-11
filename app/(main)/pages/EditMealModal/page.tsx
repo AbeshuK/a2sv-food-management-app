@@ -250,7 +250,7 @@ const EditMealModal: React.FC<EditMealModalProps> = ({ visible, food, onHide, on
           {/* Buttons */}
           <div className="flex justify-content-end mt-4 gap-2">
             <Button
-              label={loading ? 'Editing Food...' : 'Edit Food'}
+              label={loading ? 'Updating Food...' : 'Update Food'}
               icon={loading ? 'pi pi-spin pi-spinner' : 'pi pi-pencil'}
               className="p-button-info p-button-rounded p-button-outlined"
               onClick={handleSubmit}
