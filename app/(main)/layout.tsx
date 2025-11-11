@@ -6,21 +6,22 @@ interface AppLayoutProps {
 }
 
 export const metadata: Metadata = {
-    title: 'a2sv',
-    description: 'The ultimate collection of design-agnostic, flexible and accessible React UI Components.',
+    metadataBase: new URL('https://a2sv-food-app.vercel.app/pages/restaurants'), 
+    title: 'A2SV Food Management App',
+    description: 'Manage and explore featured foods and restaurants',
     robots: { index: false, follow: false },
     viewport: { initialScale: 1, width: 'device-width' },
     openGraph: {
         type: 'website',
-        title: 'PrimeReact SAKAI-REACT',
-        url: 'https://sakai.primereact.org/',
-        description: 'The ultimate collection of design-agnostic, flexible and accessible React UI Components.',
+        title: 'A2SV Food Management App',
+        url: 'https://a2sv-food-app.vercel.app/pages/restaurants',
+        description: 'Manage and explore featured foods and restaurants',
         images: ['https://www.primefaces.org/static/social/sakai-react.png'],
-        ttl: 604800
+        ttl: 604800,
     },
     icons: {
-        icon: '/favicon.ico'
-    }
+        icon: '/favicon.ico',
+    },
 };
 
 export default function AppLayout({ children }: AppLayoutProps) {
