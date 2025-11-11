@@ -10,9 +10,9 @@ import { DataView, DataViewLayoutOptions } from "primereact/dataview";
 import { Toast } from "primereact/toast";
 import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
 import { ProgressSpinner } from "primereact/progressspinner";
-import AddMealModal from "../AddMealModal/page";
-import EditMealModal from "../EditMealModal/page";
 import { InputText } from "primereact/inputtext";
+import AddMealModal from "@/demo/components/AddMealModal";
+import EditMealModal from "@/demo/components/EditMealModal";
 
 const TableRestaurant = () => {
     const [foods, setFoods] = useState<Food[]>([]);
