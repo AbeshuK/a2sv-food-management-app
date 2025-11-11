@@ -22,58 +22,82 @@ const EditMealModal: React.FC<EditMealModalProps> = ({ visible, food, onHide, on
   const [foodImage, setFoodImage] = useState('');
   const [restaurantName, setRestaurantName] = useState('');
   const [restaurantLogo, setRestaurantLogo] = useState('');
-  const [restaurantStatus, setRestaurantStatus] = useState<'open' | 'close' | null>(null);
+  const [restaurantStatus, setRestaurantStatus] = useState<'Open Now' | 'Closed' | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
   const toast = useRef<Toast>(null);
 
   const statusOptions = [
-    { label: 'Open', value: 'open' },
-    { label: 'Close', value: 'close' }
+    { label: 'Open Now', value: 'Open Now' },
+    { label: 'Closed', value: 'Closed' },
   ];
 
-  // Prefill form when `food` changes
   useEffect(() => {
     if (food) {
-      setFoodName(food.food_name || '');
-      setFoodRating(Number(food.food_rating) || null);
-      setFoodImage(food.food_image || '');
-      setRestaurantName(food.restaurant_name || '');
+      setFoodName(food.name || '');
+      setFoodRating(Number(food.rating) || null);
+      setFoodImage(food.image || '');
+      setRestaurantName(food.restaurantName || '');
       setRestaurantLogo(food.restaurant_logo || '');
-      setRestaurantStatus(food.restaurant_status?.toLowerCase() === 'open' ? 'open' : 'close');
+      setRestaurantStatus(food.restaurant_status === 'Open Now' ? 'Open Now' : 'Closed');
     }
   }, [food]);
+
+  const isValidURL = (str: string) => {
+    try {
+      new URL(str);
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   const handleSubmit = async () => {
     setSubmitted(true);
 
-    if (!foodName || !foodRating || !foodImage || !restaurantName || !restaurantLogo || !restaurantStatus) {
+    if (
+      !foodName ||
+      !foodRating ||
+      foodRating < 1 ||
+      foodRating > 5 ||
+      !foodImage ||
+      !isValidURL(foodImage) ||
+      !restaurantName ||
+      !restaurantLogo ||
+      !isValidURL(restaurantLogo) ||
+      !restaurantStatus
+    ) {
       return;
     }
 
     if (!food) return;
 
     const payload = {
-      food_name: foodName,
-      food_rating: foodRating,
-      food_image: foodImage,
-      restaurant_name: restaurantName,
+      name: foodName,
+      rating: foodRating,
+      image: foodImage,
+      restaurantName,
       restaurant_logo: restaurantLogo,
-      restaurant_status: restaurantStatus
+      restaurant_status: restaurantStatus,
     };
 
+    setLoading(true);
     try {
       const res = await fetch(`https://6852821e0594059b23cdd834.mockapi.io/Food/${food.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
+
       await res.json();
-      toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Meal updated!', life: 3000 });
+      toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Food updated successfully!', life: 3000 });
       handleReset();
       onAdded?.();
     } catch (err) {
       console.error(err);
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Failed to update meal', life: 3000 });
+      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Failed to update food', life: 3000 });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -83,7 +107,7 @@ const EditMealModal: React.FC<EditMealModalProps> = ({ visible, food, onHide, on
     setFoodImage('');
     setRestaurantName('');
     setRestaurantLogo('');
-    setRestaurantStatus(null);
+    setRestaurantStatus('Open Now'); // default first option
     setSubmitted(false);
     onHide();
   };
@@ -91,82 +115,154 @@ const EditMealModal: React.FC<EditMealModalProps> = ({ visible, food, onHide, on
   return (
     <>
       <Toast ref={toast} />
-      <Dialog header="Edit Meal" visible={visible} style={{ width: '450px' }} modal onHide={handleReset}>
+      <Dialog header="Edit Food" visible={visible} style={{ width: '450px' }} modal onHide={handleReset}>
         <div className="p-fluid">
+          {/* Food Name */}
           <div className="field">
-            <label htmlFor="foodName">Food Name*</label>
+            <label htmlFor="food_name">
+              Food Name <span className="text-red-500 font-bold">*</span>
+            </label>
             <InputText
-              id="foodName"
+              id="food_name"
+              name="food_name"
               value={foodName}
+              placeholder="Enter food name"
+              aria-describedby="food-name-error"
               onChange={(e) => setFoodName(e.target.value)}
-              className={classNames({ 'p-invalid': submitted && !foodName })}
+              className={classNames('food-input', { 'p-invalid': submitted && !foodName })}
             />
-            {submitted && !foodName && <small className="p-error">Food name is required</small>}
+            {submitted && !foodName && (
+              <small id="food-name-error" className="p-error">
+                Food Name is required
+              </small>
+            )}
           </div>
 
+          {/* Food Rating */}
           <div className="field">
-            <label htmlFor="foodRating">Food Rating*</label>
+            <label htmlFor="food_rating">
+              Food Rating <span className="text-red-500 font-bold">*</span>
+            </label>
             <InputNumber
-              id="foodRating"
+              id="food_rating"
+              name="food_rating"
               value={foodRating}
-              onValueChange={(e) => setFoodRating(e.value as any)}
+              placeholder="Enter food rating (1-5)"
+              aria-describedby="food-rating-error"
+              onValueChange={(e) => setFoodRating(e.value as number)}
               min={1}
               max={5}
               showButtons
-              className={classNames({ 'p-invalid': submitted && !foodRating })}
+              className={classNames('food-input', { 'p-invalid': submitted && (!foodRating || foodRating < 1 || foodRating > 5) })}
             />
-            {submitted && !foodRating && <small className="p-error">Food rating is required</small>}
+            {submitted && (!foodRating || foodRating < 1 || foodRating > 5) && (
+              <small id="food-rating-error" className="p-error">
+                Food Rating must be between 1 and 5
+              </small>
+            )}
           </div>
 
+          {/* Food Image */}
           <div className="field">
-            <label htmlFor="foodImage">Food Image (link)*</label>
+            <label htmlFor="food_image">
+              Food Image URL <span className="text-red-500 font-bold">*</span>
+            </label>
             <InputText
-              id="foodImage"
+              id="food_image"
+              name="food_image"
               value={foodImage}
+              placeholder="Enter food image URL"
+              aria-describedby="food-image-error"
               onChange={(e) => setFoodImage(e.target.value)}
-              className={classNames({ 'p-invalid': submitted && !foodImage })}
+              className={classNames('food-input', { 'p-invalid': submitted && (!foodImage || !isValidURL(foodImage)) })}
             />
-            {submitted && !foodImage && <small className="p-error">Food image is required</small>}
+            {submitted && (!foodImage || !isValidURL(foodImage)) && (
+              <small id="food-image-error" className="p-error">
+                Food Image URL is required
+              </small>
+            )}
           </div>
 
+          {/* Restaurant Name */}
           <div className="field">
-            <label htmlFor="restaurantName">Restaurant Name*</label>
+            <label htmlFor="restaurant_name">
+              Restaurant Name <span className="text-red-500 font-bold">*</span>
+            </label>
             <InputText
-              id="restaurantName"
+              id="restaurant_name"
+              name="restaurant_name"
               value={restaurantName}
+              placeholder="Enter restaurant name"
+              aria-describedby="restaurant-name-error"
               onChange={(e) => setRestaurantName(e.target.value)}
-              className={classNames({ 'p-invalid': submitted && !restaurantName })}
+              className={classNames('food-input', { 'p-invalid': submitted && !restaurantName })}
             />
-            {submitted && !restaurantName && <small className="p-error">Restaurant name is required</small>}
+            {submitted && !restaurantName && (
+              <small id="restaurant-name-error" className="p-error">
+                Restaurant Name is required
+              </small>
+            )}
           </div>
 
+          {/* Restaurant Logo */}
           <div className="field">
-            <label htmlFor="restaurantLogo">Restaurant Logo (link)*</label>
+            <label htmlFor="restaurant_logo">
+              Restaurant Logo URL <span className="text-red-500 font-bold">*</span>
+            </label>
             <InputText
-              id="restaurantLogo"
+              id="restaurant_logo"
+              name="restaurant_logo"
               value={restaurantLogo}
+              placeholder="Enter restaurant logo URL"
+              aria-describedby="restaurant-logo-error"
               onChange={(e) => setRestaurantLogo(e.target.value)}
-              className={classNames({ 'p-invalid': submitted && !restaurantLogo })}
+              className={classNames('food-input', { 'p-invalid': submitted && (!restaurantLogo || !isValidURL(restaurantLogo)) })}
             />
-            {submitted && !restaurantLogo && <small className="p-error">Restaurant logo is required</small>}
+            {submitted && (!restaurantLogo || !isValidURL(restaurantLogo)) && (
+              <small id="restaurant-logo-error" className="p-error">
+                Restaurant Logo URL is required
+              </small>
+            )}
           </div>
 
+          {/* Restaurant Status */}
           <div className="field">
-            <label htmlFor="restaurantStatus">Restaurant Status*</label>
+            <label htmlFor="restaurant_status">
+              Restaurant Status <span className="text-red-500 font-bold">*</span>
+            </label>
             <Dropdown
-              id="restaurantStatus"
+              id="restaurant_status"
+              name="restaurant_status"
               value={restaurantStatus}
               options={statusOptions}
               onChange={(e) => setRestaurantStatus(e.value)}
-              placeholder="Select Status"
-              className={classNames({ 'p-invalid': submitted && !restaurantStatus })}
+              placeholder="Select food status"
+              aria-describedby="restaurant-status-error"
+              className={classNames('food-input', { 'p-invalid': submitted && !restaurantStatus })}
             />
-            {submitted && !restaurantStatus && <small className="p-error">Restaurant status is required</small>}
+            {submitted && !restaurantStatus && (
+              <small id="restaurant-status-error" className="p-error">
+                Restaurant Status must be “Open Now” or “Closed”
+              </small>
+            )}
           </div>
 
+          {/* Buttons */}
           <div className="flex justify-content-end mt-4 gap-2">
-            <Button label="Cancel" className="p-button-secondary" onClick={handleReset} />
-            <Button label="Save" className="p-button-primary" onClick={handleSubmit} />
+            <Button
+              label={loading ? 'Editing Food...' : 'Edit Food'}
+              icon={loading ? 'pi pi-spin pi-spinner' : 'pi pi-pencil'}
+              className="p-button-info p-button-rounded p-button-outlined"
+              onClick={handleSubmit}
+              disabled={loading}
+            />
+            <Button
+              label="Cancel"
+              icon="pi pi-times"
+              className="p-button-danger p-button-rounded p-button-outlined"
+              onClick={handleReset}
+              disabled={loading}
+            />
           </div>
         </div>
       </Dialog>

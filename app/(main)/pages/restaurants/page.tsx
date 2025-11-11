@@ -47,11 +47,11 @@ const TableRestaurant = () => {
 
             const mappedData: Food[] = data.map((item: any) => ({
                 id: item.id,
-                food_name: item.name,
-                food_rating: item.rating,
-                restaurant_status: item.open ? "OPEN" : "CLOSED",
-                restaurant_name: "Unknown Restaurant",
-                food_image: item.logo || item.avatar,
+                name: item.name,
+                rating: item.rating,
+                status: item.open ? "OPEN" : "CLOSED",
+                restaurantName: "Unknown Restaurant",
+                image: item.logo || item.avatar,
                 Price: item.Price || item.price,
             }));
 
@@ -65,7 +65,7 @@ const TableRestaurant = () => {
     };
 
     const getSeverity = (food: Food) => {
-        switch (food.restaurant_status?.toUpperCase()) {
+        switch (food.status?.toUpperCase()) {
             case "OPEN": return "success";
             case "CLOSED": return "danger";
             case "BUSY": return "warning";
@@ -92,7 +92,7 @@ const TableRestaurant = () => {
                 method: 'DELETE'
             });
             toast.current?.show({ severity: 'success', summary: 'Deleted', detail: 'Meal deleted successfully', life: 3000 });
-            fetchFoods(); // refresh the table
+            fetchFoods(); 
         } catch (err) {
             console.error(err);
             toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Failed to delete meal', life: 3000 });
@@ -105,19 +105,19 @@ const TableRestaurant = () => {
     const listItem = (food: Food, index: number) => (
         <div className="col-12" key={`${food.id}-${index}`}>
             <div className={classNames("flex flex-column xl:flex-row xl:align-items-start p-4 gap-4", { "border-top-1 surface-border": index !== 0 })}>
-                <img className="w-9 sm:w-16rem xl:w-10rem shadow-2 block mx-auto border-round" src={food.food_image || "/layout/images/placeholder.png"} alt={food.food_name} />
+                <img className="w-9 sm:w-16rem xl:w-10rem shadow-2 block mx-auto border-round" src={food.image || "/layout/images/placeholder.png"} alt={food.name} />
                 <div className="flex flex-column sm:flex-row justify-content-between align-items-center xl:align-items-start flex-1 gap-4">
                     <div className="flex flex-column align-items-center sm:align-items-start gap-3">
-                        <div className="text-2xl font-bold text-900">{food.food_name}</div>
-                        <Rating value={Number(food.food_rating) || 0} readOnly cancel={false} />
+                        <div className="text-2xl font-bold text-900">{food.name}</div>
+                        <Rating value={Number(food.rating) || 0} readOnly cancel={false} />
                         <div className="flex align-items-center gap-3">
-                            <Tag value={food.restaurant_status || "Unknown"} severity={getSeverity(food)} />
-                            <span className="font-semibold text-sm opacity-70">{food.restaurant_name || "Unnamed Restaurant"}</span>
+                            <Tag value={food.status || "Unknown"} severity={getSeverity(food)} />
+                            <span className="font-semibold text-sm opacity-70">{food.restaurantName || "Unnamed Restaurant"}</span>
                         </div>
                     </div>
                     <div className="flex sm:flex-column align-items-center sm:align-items-end gap-3 sm:gap-2">
-                        <span className="text-2xl font-semibold">${food.Price || food.price || 0}</span>
-                        <Button icon="pi pi-shopping-cart" className="p-button-rounded" disabled={food.restaurant_status?.toUpperCase() === "CLOSED"} />
+                        <span className="text-2xl font-semibold">${food.Price || 0}</span>
+                        <Button icon="pi pi-shopping-cart" className="p-button-rounded" disabled={food.status?.toUpperCase() === "CLOSED"} />
                     </div>
                 </div>
             </div>
@@ -135,28 +135,28 @@ const TableRestaurant = () => {
                     <div className="flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
                         <div className="flex align-items-center gap-2">
                             <i className="pi pi-store" />
-                            <span className="font-semibold">{food.restaurant_name}</span>
+                            <span className="font-semibold">{food.name}</span>
                         </div>
-                        <Tag value={food.restaurant_status || "Unknown"} severity={getSeverity(food)} />
+                        <Tag value={food.status || "Unknown"} severity={getSeverity(food)} />
                     </div>
 
                     <div className="flex flex-column align-items-center gap-3 py-4">
-                        <img className="w-9 shadow-2 border-round" src={food.food_image || "/layout/images/placeholder.png"} alt={food.food_name} />
-                        <div className="text-xl font-bold text-center">{food.food_name}</div>
-                        <Rating value={Number(food.food_rating) || 0} readOnly cancel={false} />
+                        <img className="w-9 shadow-2 border-round" src={food.image || "/layout/images/placeholder.png"} alt={food.image} />
+                        <div className="text-xl font-bold text-center">{food.name}</div>
+                        <Rating value={Number(food.rating) || 0} readOnly cancel={false} />
                     </div>
 
                     <div className="flex align-items-center justify-content-between mt-3 cursor-pointer" onClick={() => setActiveFoodId(isActive ? null : food.id)}>
-                        <span className="text-2xl font-semibold">${food.Price || food.price || 0}</span>
+                        <span className="text-2xl font-semibold">${food.Price || 0}</span>
                         <Button icon="pi pi-ellipsis-h" className="p-button-rounded p-button-text" />
                     </div>
 
                     {isActive && (
                         <div className="flex justify-content-end gap-2 mt-3">
-                            <Button label="Add" icon="pi pi-plus" size="small" severity="success" onClick={() => { setSelectedFood(food); setAddModalVisible(true); }} />
-                            <Button label="Edit" icon="pi pi-pencil" size="small" severity="info" onClick={() => { setSelectedFood(food); setEditModalVisible(true); }} />
+                            <Button label="Add Food" icon="pi pi-plus" size="small" severity="success" onClick={() => { setSelectedFood(food); setAddModalVisible(true); }} />
+                            <Button label="Edit Food" icon="pi pi-pencil" size="small" severity="info" onClick={() => { setSelectedFood(food); setEditModalVisible(true); }} />
                             <Button
-                                label={isDeleting ? "" : "Delete"}
+                                label={isDeleting ? "" : "Delete Food"}
                                 icon={isDeleting ? undefined : "pi pi-trash"}
                                 size="small"
                                 severity="danger"

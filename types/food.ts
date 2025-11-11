@@ -1,20 +1,30 @@
 export interface Food {
-  id: string; 
-  createdAt: string; 
+  id: string;
   name: string;
-  avatar: string;
-  logo: string;
-  rating: number | string; 
+  createdAt: string;
+  avatar: string;             
+  image?: string;            
+  logo?: string;   
+
+  rating: number | string;
+  Price?: number | string;    
+  price?: number | string; 
+  
+  restaurantName?: string;    
+  restaurant?: {
+    name?: string;
+    logo?: string;
+    status?: string;
+  }; 
+  
   open: boolean;
-  Price?: number | string; 
-  price?: number | string;
+  status?: string;           
+  restaurant_status?: string; 
+  type?: string;              
+
   food_name?: string;
   food_image?: string;
   food_rating?: number | string;
-  restaurant_name?: string;
   restaurant_image?: string;
   restaurant_logo?: string;
-  restaurant_status?: string;
-  status?: string;
-  type?: string;
 }
