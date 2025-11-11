@@ -9,8 +9,8 @@ import { classNames } from "primereact/utils";
 import { DataView, DataViewLayoutOptions } from "primereact/dataview";
 import { Toast } from "primereact/toast";
 import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
-import { ProgressSpinner } from "primereact/progressspinner";
 import { InputText } from "primereact/inputtext";
+import { Skeleton } from "primereact/skeleton"; // ✅ Added for loading placeholders
 import AddMealModal from "@/demo/components/AddMealModal";
 import EditMealModal from "@/demo/components/EditMealModal";
 
@@ -161,12 +161,60 @@ const TableRestaurant = () => {
                                 size="small"
                                 severity="danger"
                                 onClick={() => confirmDelete(food)}
-                            >
-                                {isDeleting && <ProgressSpinner style={{ width: '20px', height: '20px' }} />}
-                            </Button>
+                            />
                         </div>
                     )}
                 </div>
+            </div>
+        );
+    };
+
+    // Skeleton template for loading
+    const skeletonTemplate = (layout: "list" | "grid") => {
+        const items = Array.from({ length: 6 });
+        return (
+            <div className="grid grid-nogutter">
+                {items.map((_, i) =>
+                    layout === "list" ? (
+                        <div className="col-12" key={i}>
+                            <div className="flex flex-column xl:flex-row xl:align-items-start p-4 gap-4 border-top-1 surface-border">
+                                <Skeleton className="w-9 sm:w-16rem xl:w-10rem shadow-2 h-6rem border-round" />
+                                <div className="flex flex-column sm:flex-row justify-content-between align-items-center xl:align-items-start flex-1 gap-4">
+                                    <div className="flex flex-column align-items-center sm:align-items-start gap-3">
+                                        <Skeleton className="w-8rem border-round h-2rem" />
+                                        <Skeleton className="w-6rem border-round h-1rem" />
+                                        <div className="flex align-items-center gap-3">
+                                            <Skeleton className="w-6rem border-round h-1rem" />
+                                            <Skeleton className="w-3rem border-round h-1rem" />
+                                        </div>
+                                    </div>
+                                    <div className="flex sm:flex-column align-items-center sm:align-items-end gap-3 sm:gap-2">
+                                        <Skeleton className="w-4rem border-round h-2rem" />
+                                        <Skeleton shape="circle" className="w-3rem h-3rem" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="col-12 sm:col-6 lg:col-4 p-2" key={i}>
+                            <div className="p-4 border-1 surface-border surface-card border-round">
+                                <div className="flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                                    <Skeleton className="w-6rem border-round h-1rem" />
+                                    <Skeleton className="w-3rem border-round h-1rem" />
+                                </div>
+                                <div className="flex flex-column align-items-center gap-3 py-5">
+                                    <Skeleton className="w-9 shadow-2 border-round h-10rem" />
+                                    <Skeleton className="w-8rem border-round h-2rem" />
+                                    <Skeleton className="w-6rem border-round h-1rem" />
+                                </div>
+                                <div className="flex align-items-center justify-content-between">
+                                    <Skeleton className="w-4rem border-round h-2rem" />
+                                    <Skeleton shape="circle" className="w-3rem h-3rem" />
+                                </div>
+                            </div>
+                        </div>
+                    )
+                )}
             </div>
         );
     };
@@ -197,9 +245,7 @@ const TableRestaurant = () => {
             <h5 className="mb-4">🍔 Featured Foods</h5>
 
             {loading ? (
-                <div className="flex justify-content-center my-6">
-                    <ProgressSpinner />
-                </div>
+                skeletonTemplate(layout)
             ) : (
                 <DataView
                     value={foods}
