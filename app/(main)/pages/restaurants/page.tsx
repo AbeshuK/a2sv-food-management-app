@@ -229,7 +229,7 @@ const TableRestaurant = () => {
     const header = (
         <div className="flex justify-content-between mb-3">
             <InputText
-                placeholder="Search foods..."
+                placeholder="Type a food name and press Enter"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') filterFoods(searchTerm); }}
